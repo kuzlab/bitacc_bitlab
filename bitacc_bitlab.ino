@@ -24,6 +24,7 @@ int16_t pre_gx, pre_gy, pre_gz;
 
 #include "motion.h"
 
+#define ANALOG_OUT_PIN PIN_C6
 
 // uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
 // list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
@@ -44,9 +45,8 @@ bool blinkState = false;
 
 #define MINIMUM_DECAY 100 //msec : no sound after over THD
 
-
 void setup() {
-    // join I2C bus (I2Cdev library doesn't do this automatically)
+  // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
@@ -128,6 +128,9 @@ void setup() {
     calib_vec_length /= CALIB_VEC_TIMES;
     
     Serial.print("CALIBRATED VECTOR LENGTH = "); Serial.println(calib_vec_length);
+    
+  pinMode(ANALOG_OUT_PIN, OUTPUT);
+  analogWrite(ANALOG_OUT_PIN, 128);
 }
 
 void loop() {
@@ -136,10 +139,27 @@ void loop() {
     
     
 //    double cos_vec = get_cos_two_vector(ax, ay, az, pre_ax, pre_ay, pre_az);
-    
+
+/////////////////////////////////////////////
+////        slope mode
+/////////////////////////////////////////////
+
+  #define SLOPE_MAX 17000
+  #define ANALOG_OUT_MAX 255
+
+  double slope_x = ((double)ax + SLOPE_MAX)/2/SLOPE_MAX * ANALOG_OUT_MAX;
+  Serial.print("slope_x: "); Serial.print(slope_x); Serial.print("("); Serial.println(ax);
+  analogWrite(ANALOG_OUT_PIN, (int)slope_x);
+
+/////////////////////////////////////////////
+////        shake mode
+/////////////////////////////////////////////
+
+/*    
 //   struct _vec_cal v;
     double v[3] = {0.0, 0.0, 0.0};
     get_cos_two_vector((double*)v, ax, ay, az, pre_ax, pre_ay, pre_az);
+
     
     Serial.print("flag: "); Serial.print(get_motion_flag());
     Serial.print("("); Serial.print(trigger_flag_timeout_count); Serial.print(") ");
@@ -177,7 +197,8 @@ void loop() {
           set_motion_flag();
         }
       }
-    } 
+    }
+   */ 
 
     // these methods (and a few others) are also available
     //accelgyro.getAcceleration(&ax, &ay, &az);

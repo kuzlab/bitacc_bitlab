@@ -4,11 +4,11 @@
 double get_cos_two_vector(double* v, int16_t sx, int16_t sy, int16_t sz, int16_t tx, int16_t ty, int16_t tz)
 {
   double cos_vec = 0.0;
-
-//  Serial.print("vecs = (");  
-//  Serial.print(sx); Serial.print(":"); Serial.print(sy); Serial.print(":"); Serial.print(sz); Serial.print(" ) , ( ");
-//  Serial.print(tx); Serial.print(":"); Serial.print(ty); Serial.print(":"); Serial.print(tz); Serial.println(")");
-
+/*
+  Serial.print("vecs = (");  
+  Serial.print(sx); Serial.print(":"); Serial.print(sy); Serial.print(":"); Serial.print(sz); Serial.print(" ) , ( ");
+  Serial.print(tx); Serial.print(":"); Serial.print(ty); Serial.print(":"); Serial.print(tz); Serial.println(")");
+*/
   double s_leng = sqrt(sx * sx + sy * sy + sz * sz);
   double t_leng = sqrt(tx * tx + ty * ty + tz * tz);  
 
