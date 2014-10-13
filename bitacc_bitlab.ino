@@ -25,6 +25,9 @@ int16_t pre_gx, pre_gy, pre_gz;
 #include "motion.h"
 
 #define ANALOG_OUT_PIN PIN_C6
+#define SWITCH_PIN PIN_B3
+
+#define SHAKE_MODE HIGH
 
 // uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
 // list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
@@ -131,11 +134,13 @@ void setup() {
     
   pinMode(ANALOG_OUT_PIN, OUTPUT);
   analogWrite(ANALOG_OUT_PIN, 128);
+  
+  pinMode(SWITCH_PIN, INPUT);
 }
 
 void loop() {
     // read raw accel/gyro measurements from device
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+//    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
     
     
 //    double cos_vec = get_cos_two_vector(ax, ay, az, pre_ax, pre_ay, pre_az);
@@ -146,14 +151,68 @@ void loop() {
 
   #define SLOPE_MAX 17000
   #define ANALOG_OUT_MAX 255
-
-  double slope_x = ((double)ax + SLOPE_MAX)/2/SLOPE_MAX * ANALOG_OUT_MAX;
+  #define AVERAGE_NUM 10
+  #define AVERAGE_DELAY 0
+  
+  double sum_ax = 0;
+  double sum_ay = 0;
+  double sum_az = 0;
+  double sum_gx = 0;
+  double sum_gy = 0;
+  double sum_gz = 0;
+  
+  for(int i = 0; i < AVERAGE_NUM; i++){
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    sum_ax += ax;
+    sum_ay += ay;
+    sum_az += az;
+    sum_gx += gx;
+    sum_gy += gy;
+    sum_gz += gz;
+  }
+    
+  double slope_x = ((double)sum_ax/AVERAGE_NUM + SLOPE_MAX)/2/SLOPE_MAX * ANALOG_OUT_MAX;
   Serial.print("slope_x: "); Serial.print(slope_x); Serial.print("("); Serial.println(ax);
   analogWrite(ANALOG_OUT_PIN, (int)slope_x);
 
 /////////////////////////////////////////////
 ////        shake mode
 /////////////////////////////////////////////
+
+
+  double sum_power = 0;
+  #define DECREASE 100
+  #define POWER_MAX 10000
+  
+  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+  pre_ax = ax;
+  pre_ay = ay;    
+  pre_az = az;
+
+  while(digitalRead(SWITCH_PIN) == SHAKE_MODE){
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    
+    sum_power = sum_power + abs(pre_ax - ax)/100 + abs(pre_ay - ay)/100 + abs(pre_az - az)/100;
+
+    if(sum_power > POWER_MAX){
+      sum_power = POWER_MAX;
+    }
+    
+    Serial.print("power = "); Serial.println(sum_power);
+    analogWrite(ANALOG_OUT_PIN, (int)(sum_power/POWER_MAX * 255));
+    
+    pre_ax = ax;
+    pre_ay = ay;    
+    pre_az = az;
+    
+    
+    sum_power -= DECREASE;
+    if(sum_power < 0){
+      sum_power = 0;
+    }
+
+  }
+
 
 /*    
 //   struct _vec_cal v;
