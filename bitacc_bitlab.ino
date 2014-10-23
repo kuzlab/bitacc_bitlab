@@ -1,3 +1,8 @@
+// please set modes set 1-2
+// #1 = slop mode and taptap mode
+// #2 = revolve mode and E=mgh mode
+#define ACCELEBIT_MODES_SET 2
+
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
@@ -27,7 +32,20 @@ int16_t pre_gx, pre_gy, pre_gz;
 #define ANALOG_OUT_PIN PIN_C6
 #define SWITCH_PIN PIN_B3
 
+#if ACCELEBIT_MODES_SET == 1  // slope mode and taptap mode
+/////////////////////////////////////////////
+////        slope mode
+/////////////////////////////////////////////
 #define SHAKE_MODE HIGH
+  
+
+/////////////////////////////////////////////
+////        taptap mode
+/////////////////////////////////////////////
+
+
+
+#endif
 
 // uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
 // list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
@@ -47,6 +65,23 @@ bool blinkState = false;
 #define THD 8000
 
 #define MINIMUM_DECAY 100 //msec : no sound after over THD
+
+
+#if ACCELEBIT_MODES_SET == 2  // revolve mode and height mode
+/////////////////////////////////////////////
+////        revolve mode
+/////////////////////////////////////////////
+  
+  
+
+/////////////////////////////////////////////
+////        height mode
+/////////////////////////////////////////////
+
+
+
+#endif
+
 
 void setup() {
   // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -71,29 +106,6 @@ void setup() {
     // verify connection
     Serial.println("Testing device connections...");
     Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
-
-    // use the code below to change accel/gyro offset values
-    /*
-    Serial.println("Updating internal sensor offsets...");
-    // -76	-2359	1688	0	0	0
-    Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
-    Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
-    Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
-    Serial.print(accelgyro.getXGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
-    Serial.print("\n");
-    accelgyro.setXGyroOffset(220);
-    accelgyro.setYGyroOffset(76);
-    accelgyro.setZGyroOffset(-85);
-    Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
-    Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
-    Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
-    Serial.print(accelgyro.getXGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
-    Serial.print("\n");
-    */
 
     // configure Arduino LED for
     pinMode(LED_PIN, OUTPUT);
@@ -131,24 +143,21 @@ void setup() {
     calib_vec_length /= CALIB_VEC_TIMES;
     
     Serial.print("CALIBRATED VECTOR LENGTH = "); Serial.println(calib_vec_length);
-    
+      
+
   pinMode(ANALOG_OUT_PIN, OUTPUT);
   analogWrite(ANALOG_OUT_PIN, 128);
   
   pinMode(SWITCH_PIN, INPUT);
+  
 }
 
 void loop() {
-    // read raw accel/gyro measurements from device
-//    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    
-    
-//    double cos_vec = get_cos_two_vector(ax, ay, az, pre_ax, pre_ay, pre_az);
 
+#if ACCELEBIT_MODES_SET == 1  // slope mode and taptap mode
 /////////////////////////////////////////////
 ////        slope mode
 /////////////////////////////////////////////
-
   #define SLOPE_MAX 17000
   #define ANALOG_OUT_MAX 255
   #define AVERAGE_NUM 10
@@ -212,52 +221,25 @@ void loop() {
     }
 
   }
+  
+#endif
 
 
-/*    
-//   struct _vec_cal v;
-    double v[3] = {0.0, 0.0, 0.0};
-    get_cos_two_vector((double*)v, ax, ay, az, pre_ax, pre_ay, pre_az);
+#if ACCELEBIT_MODES_SET == 2  // revolve mode and height mode
+/////////////////////////////////////////////
+////        revolve mode
+/////////////////////////////////////////////
+  
+  
 
-    
-    Serial.print("flag: "); Serial.print(get_motion_flag());
-    Serial.print("("); Serial.print(trigger_flag_timeout_count); Serial.print(") ");
-    
-    Serial.print(", cos = "); Serial.print(v[0]);
-    Serial.print(", length = "); Serial.print(v[1]/calib_vec_length);
-    Serial.print(", pre_length = "); Serial.println(v[2]/calib_vec_length);    
-    
-    pre_ax = ax;
-    pre_ay = ay;    
-    pre_az = az;
-    
-    if(get_motion_flag()){ // if ready to make sound
-      if(v[0] < 0){
-        if((abs(v[1] - calib_vec_length) > calib_vec_length * VEC_LENGTH_THD_GAIN)){      
-          Serial.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
-          Serial.println("@@@@@   NOTE ON !    @@@@@");
-          Serial.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");      
-      
-          delay(MINIMUM_DECAY);
-          clear_motion_flag();
-        }
-        else{
-//          clear_motion_flag();
-        }
-      }
-      trigger_flag_timeout_count++;
-      if(trigger_flag_timeout_count > TRIGGER_FLAG_TIMEOUT){
-        clear_motion_flag();
-      }
-    }
-    else{
-      if(v[0] > 0){
-        if(abs(v[1] - calib_vec_length) > calib_vec_length * VEC_LENGTH_THD_GAIN_FOR_TRIGGER_FLAG){
-          set_motion_flag();
-        }
-      }
-    }
-   */ 
+/////////////////////////////////////////////
+////        height mode
+/////////////////////////////////////////////
+
+
+
+#endif
+
 
     // these methods (and a few others) are also available
     //accelgyro.getAcceleration(&ax, &ay, &az);
