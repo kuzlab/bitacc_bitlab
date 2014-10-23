@@ -42,7 +42,7 @@ int16_t pre_gx, pre_gy, pre_gz;
 /////////////////////////////////////////////
 ////        taptap mode
 /////////////////////////////////////////////
-
+#define TAPTAP_MODE LOW
 
 
 #endif
@@ -71,14 +71,24 @@ bool blinkState = false;
 /////////////////////////////////////////////
 ////        revolve mode
 /////////////////////////////////////////////
-  
-  
+int16_t revolve_default_val = 0;
+int16_t revolve_sum_val = 0;
+
+#define REVOLVE_MAX 10000
+#define REVOLVE_MIN 0
+
+#define REVOLVE_MODE HIGH
 
 /////////////////////////////////////////////
 ////        height mode
 /////////////////////////////////////////////
+int16_t height_default_val = 0;
+int16_t height_sum_val = 0;
 
+#define HEIGHT_MAX 10000
+#define HEIGHT_MIN 0
 
+#define HEIGHT_MODE LOW
 
 #endif
 
@@ -143,7 +153,11 @@ void setup() {
     calib_vec_length /= CALIB_VEC_TIMES;
     
     Serial.print("CALIBRATED VECTOR LENGTH = "); Serial.println(calib_vec_length);
-      
+
+
+  revolve_default_val = gx; 
+  
+  height_default_val = az;
 
   pinMode(ANALOG_OUT_PIN, OUTPUT);
   analogWrite(ANALOG_OUT_PIN, 128);
@@ -229,14 +243,28 @@ void loop() {
 /////////////////////////////////////////////
 ////        revolve mode
 /////////////////////////////////////////////
-  
-  
+  if(digitalRead(SWITCH_PIN) == REVOLVE_MODE){
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    
+    revolve_sum_val += (gx - revolve_default_val);
+    if(revolve_sum_val < REVOLVE_MIN){revolve_sum_val = REVOLVE_MIN;}
+    if(revolve_sum_val > REVOLVE_MAX){revolve_sum_val = REVOLVE_MAX;}
+    
+    analogWrite(ANALOG_OUT_PIN, (int)((double)revolve_sum_val/(REVOLVE_MAX - REVOLVE_MIN) * 255));
+  }
 
 /////////////////////////////////////////////
 ////        height mode
 /////////////////////////////////////////////
-
-
+  if(digitalRead(SWITCH_PIN) == HEIGHT_MODE){
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    
+    revolve_sum_val += (az - height_default_val);
+    if(height_sum_val < HEIGHT_MIN){height_sum_val = HEIGHT_MIN;}
+    if(height_sum_val > HEIGHT_MAX){height_sum_val = HEIGHT_MAX;}
+    
+    analogWrite(ANALOG_OUT_PIN, (int)((double)height_sum_val/(HEIGHT_MAX - HEIGHT_MIN) * 255));
+  }
 
 #endif
 
